@@ -416,6 +416,9 @@ interface PlayerOptions {
 	rating?: number;
 	team?: PokemonSet[] | string | null;
 	seed?: PRNGSeed;
+	raid?: boolean;
+	maxHp?: number;
+	currentHp?: number;
 }
 
 interface TextObject {
