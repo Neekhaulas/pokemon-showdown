@@ -2991,7 +2991,7 @@ export class Battle {
 			const team = this.getTeam(options);
 			side = new Side(options.name || `Player ${slotNum + 1}`, this, slotNum, team);
 			if (options.avatar) side.avatar = '' + options.avatar;
-			if(options.raid && options.maxHp && options.currentHp) {
+			if (options.raid && options.maxHp && options.currentHp) {
 				side.pokemon[0].maxhp = options.maxHp;
 				side.pokemon[0].hp = options.currentHp;
 			}

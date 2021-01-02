@@ -5,6 +5,8 @@
   "main": ".sim-dist/index.js",
   "dependencies": {
     "@types/better-sqlite3": "^5.4.0",
+    "eris": "^0.14.0",
+    "eris-collector": "github:Neekhaulas/eris-collector",
     "probe-image-size": "^5.0.0",
     "sockjs": "^0.3.21",
     "sucrase": "^3.15.0"

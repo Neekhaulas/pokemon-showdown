@@ -6,14 +6,14 @@
  * @license MIT
  */
 
-import { ObjectReadWriteStream } from '../../lib/streams';
-import { BattlePlayer } from '../battle-stream';
-import { PRNG, PRNGSeed } from '../prng';
-import { CommandContext } from '../../../src/types/command';
-import { sendEmbed } from '../../../src/modules/utils';
+import {ObjectReadWriteStream} from '../../lib/streams';
+import {BattlePlayer} from '../battle-stream';
+import {PRNG, PRNGSeed} from '../prng';
+import {CommandContext} from '../../../src/types/command';
+import {sendEmbed} from '../../../src/modules/utils';
 import MessageEmbed from '../../../src/modules/MessageEmbed';
 import MessageCollector from 'eris-collector';
-import { Message } from 'eris';
+import {Message} from 'eris';
 
 export class DiscordPlayer extends BattlePlayer {
 	protected readonly move: number;
@@ -46,24 +46,24 @@ export class DiscordPlayer extends BattlePlayer {
 
 		this.collector.on('collect', (m: Message) => {
 			if (this.canPickMove) {
-				var choice = parseInt(m.content);
+				const choice = parseInt(m.content);
 				if (choice >= 1 || choice <= 4) {
-					if(this.active.moves[choice - 1] == undefined) {
-						sendEmbed(context, context.channel, `Your Pokémon doesn't have a move ${choice}`);
+					if (this.active.moves[choice - 1] === undefined) {
+						void sendEmbed(context, context.channel, `Your Pokémon doesn't have a move ${choice}`);
 					} else if (this.active.moves[choice - 1].disabled) {
-						sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1]} because it is disabled`);
+						void sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1]} because it is disabled`);
 					} else {
 						this.choose(`move ${choice}`);
 						this.canPickMove = false;
 					}
 				}
 			} else if (this.mustSwitch) {
-				var choice = parseInt(m.content);
+				const choice = parseInt(m.content);
 				if (choice >= 1 || choice <= 3) {
-					if (this.side.pokemon[choice - 1] == undefined) {
-						sendEmbed(context, context.channel, `You don't have a Pokémon in your slot ${choice}`);
-					} else if(choice == 1) {
-						sendEmbed(context, context.channel, `You must send an other Pokémon to fight`);
+					if (this.side.pokemon[choice - 1] === undefined) {
+						void sendEmbed(context, context.channel, `You don't have a Pokémon in your slot ${choice}`);
+					} else if (choice === 1) {
+						void sendEmbed(context, context.channel, `You must send an other Pokémon to fight`);
 					} else {
 						this.choose(`switch ${choice}`);
 						this.mustSwitch = false;
@@ -79,31 +79,30 @@ export class DiscordPlayer extends BattlePlayer {
 
 	requestActions() {
 		if (this.canPickMove) {
-			var moves = this.active.moves;
+			const moves = this.active.moves;
 
-			var embed = new MessageEmbed();
-			embed.addField('Move #1', moves[0] != undefined ? `${moves[0].move}\n${moves[0].disabled ? `Disabled` : `${moves[0].pp}/${moves[0].maxpp}`}` : `\u2800`, true);
-			embed.addField('Move #2', moves[1] != undefined ? `${moves[1].move}\n${moves[1].disabled ? `Disabled` : `${moves[1].pp}/${moves[1].maxpp}`}` : `\u2800`, true);
+			const embed = new MessageEmbed();
+			embed.addField('Move #1', moves[0] !== undefined ? `${moves[0].move}\n${moves[0].disabled ? `Disabled` : `${moves[0].pp}/${moves[0].maxpp}`}` : `\u2800`, true);
+			embed.addField('Move #2', moves[1] !== undefined ? `${moves[1].move}\n${moves[1].disabled ? `Disabled` : `${moves[1].pp}/${moves[1].maxpp}`}` : `\u2800`, true);
 			embed.addField('\u2800', '\u2800', true);
-			embed.addField('Move #3', moves[2] != undefined ? `${moves[2].move}\n${moves[2].disabled ? `Disabled` : `${moves[2].pp}/${moves[2].maxpp}`}` : `\u2800`, true);
-			embed.addField('Move #4', moves[3] != undefined ? `${moves[3].move}\n${moves[3].disabled ? `Disabled` : `${moves[3].pp}/${moves[3].maxpp}`}` : `\u2800`, true);
+			embed.addField('Move #3', moves[2] !== undefined ? `${moves[2].move}\n${moves[2].disabled ? `Disabled` : `${moves[2].pp}/${moves[2].maxpp}`}` : `\u2800`, true);
+			embed.addField('Move #4', moves[3] !== undefined ? `${moves[3].move}\n${moves[3].disabled ? `Disabled` : `${moves[3].pp}/${moves[3].maxpp}`}` : `\u2800`, true);
 			embed.addField('\u2800', '\u2800', true);
 
 			embed.setFooter(`Select move by sending 1, 2, 3 or 4`);
 
-			this.context.channel.createMessage(embed);
+			void this.context.channel.createMessage(embed);
 		} else if (this.mustSwitch) {
-			var pokemons = this.side.pokemon;
-			console.log(pokemons);
+			const pokemons = this.side.pokemon;
 
-			var embed = new MessageEmbed();
-			embed.addField('Pokemon #1', pokemons[0] != undefined ? `${pokemons[0].ident.replace(/(p1: |p2: )/, '')}\nUnavailable` : `\u2800`, true);
-			embed.addField('Pokemon #2', pokemons[1] != undefined ? `${pokemons[1].ident.replace(/(p1: |p2: )/, '')}\n${pokemons[1].condition}` : `\u2800`, true);
-			embed.addField('Pokemon #3', pokemons[2] != undefined ? `${pokemons[2].ident.replace(/(p1: |p2: )/, '')}\n${pokemons[2].condition}` : `\u2800`, true);
+			const embed = new MessageEmbed();
+			embed.addField('Pokemon #1', pokemons[0] !== undefined ? `${pokemons[0].ident.replace(/(p1: |p2: )/, '')}\nUnavailable` : `\u2800`, true);
+			embed.addField('Pokemon #2', pokemons[1] !== undefined ? `${pokemons[1].ident.replace(/(p1: |p2: )/, '')}\n${pokemons[1].condition}` : `\u2800`, true);
+			embed.addField('Pokemon #3', pokemons[2] !== undefined ? `${pokemons[2].ident.replace(/(p1: |p2: )/, '')}\n${pokemons[2].condition}` : `\u2800`, true);
 
 			embed.setFooter(`Select Pokémon to send by sending 1, 2 or 3`);
 
-			this.context.channel.createMessage(embed);
+			void this.context.channel.createMessage(embed);
 		}
 	}
 
@@ -146,13 +145,14 @@ export class DiscordPlayer extends BattlePlayer {
 				if (!canSwitch.length) return `pass`;
 				const target = this.chooseSwitch(
 					request.active,
-					canSwitch.map(slot => ({ slot, pokemon: pokemon[slot - 1] }))
+					canSwitch.map(slot => ({slot, pokemon: pokemon[slot - 1]}))
 				);
 				chosen.push(target);
 				return `switch ${target}`;
 			});
+			console.log(choices);
 
-			//this.choose(`switch 1`);
+			// this.choose(`switch 1`);
 		} else if (request.active) {
 			console.log('Select move');
 			this.canPickMove = true;
@@ -228,7 +228,7 @@ export class DiscordPlayer extends BattlePlayer {
 						}
 					}
 					if (m.zMove) move += ` zmove`;
-					return { choice: move, move: m };
+					return {choice: move, move: m};
 				});
 
 				const canSwitch = range(1, 6).filter(j => (
@@ -245,7 +245,7 @@ export class DiscordPlayer extends BattlePlayer {
 				if (switches.length && (!moves.length || this.prng.next() > this.move)) {
 					const target = this.chooseSwitch(
 						active,
-						canSwitch.map(slot => ({ slot, pokemon: pokemon[slot - 1] }))
+						canSwitch.map(slot => ({slot, pokemon: pokemon[slot - 1]}))
 					);
 					chosen.push(target);
 					return `switch ${target}`;
@@ -274,7 +274,8 @@ export class DiscordPlayer extends BattlePlayer {
 						` dynamax='${canDynamax}')`);
 				}
 			});
-			//this.choose(choices.join(`, `));
+			console.log(choices);
+			// this.choose(choices.join(`, `));
 		} else {
 			console.log('Preview');
 			// team preview?
