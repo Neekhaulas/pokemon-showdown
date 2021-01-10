@@ -6,22 +6,22 @@
  * @license MIT
  */
 
-import {ObjectReadWriteStream} from '../../lib/streams';
-import {BattlePlayer} from '../battle-stream';
-import {PRNG, PRNGSeed} from '../prng';
-import {CommandContext} from '../../../src/types/command';
-import {sendEmbed} from '../../../src/modules/utils';
+import { ObjectReadWriteStream } from '../../lib/streams';
+import { BattlePlayer } from '../battle-stream';
+import { PRNG, PRNGSeed } from '../prng';
+import { sendEmbed } from '../../../src/modules/utils';
 import MessageEmbed from '../../../src/modules/MessageEmbed';
-import MessageCollector from 'eris-collector';
-import {Message} from 'eris';
+import { MessageCollector } from 'eris-collector';
+import { Client, Message, TextableChannel } from 'eris';
 
 export class DiscordPlayer extends BattlePlayer {
 	protected readonly move: number;
 	protected readonly mega: number;
 	protected readonly prng: PRNG;
-	protected readonly context: CommandContext;
+	protected readonly context: { client: Client, channel: TextableChannel, userID: string };
 	canPickMove: boolean;
 	mustSwitch: boolean;
+	wantSwitch: boolean;
 	active: any = null;
 	side: any = null;
 	collector: any;
@@ -30,7 +30,7 @@ export class DiscordPlayer extends BattlePlayer {
 		playerStream: ObjectReadWriteStream<string>,
 		options: { move?: number, mega?: number, seed?: PRNG | PRNGSeed | null } = {},
 		debug = false,
-		context: CommandContext
+		context: { client: Client, channel: TextableChannel, userID: string }
 	) {
 		super(playerStream, debug);
 		this.move = options.move || 1.0;
@@ -40,21 +40,29 @@ export class DiscordPlayer extends BattlePlayer {
 
 		this.canPickMove = false;
 		this.mustSwitch = false;
+		this.wantSwitch = false;
 
-		const filter = (m: Message) => m.author.id === context.message.author.id;
-		this.collector = new MessageCollector(context.client.discordClient, context.channel, filter);
+		const filter = (m: Message) => m.author.id === context.userID;
+		this.collector = new MessageCollector(context.client, context.channel, filter);
 
 		this.collector.on('collect', (m: Message) => {
 			if (this.canPickMove) {
-				const choice = parseInt(m.content);
-				if (choice >= 1 || choice <= 4) {
-					if (this.active.moves[choice - 1] === undefined) {
-						void sendEmbed(context, context.channel, `Your Pokémon doesn't have a move ${choice}`);
-					} else if (this.active.moves[choice - 1].disabled) {
-						void sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1]} because it is disabled`);
-					} else {
-						this.choose(`move ${choice}`);
-						this.canPickMove = false;
+				let choice: any = m.content;
+				if (choice == 'switch') {
+					this.wantSwitch = true;
+					this.canPickMove = false;
+					this.requestActions();
+				} else {
+					choice = parseInt(choice);
+					if (choice >= 1 || choice <= 4) {
+						if (this.active.moves[choice - 1] === undefined) {
+							void sendEmbed(context, context.channel, `Your Pokémon doesn't have a move ${choice}`);
+						} else if (this.active.moves[choice - 1].disabled) {
+							void sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1]} because it is disabled`);
+						} else {
+							this.choose(`move ${choice}`);
+							this.canPickMove = false;
+						}
 					}
 				}
 			} else if (this.mustSwitch) {
@@ -67,6 +75,24 @@ export class DiscordPlayer extends BattlePlayer {
 					} else {
 						this.choose(`switch ${choice}`);
 						this.mustSwitch = false;
+					}
+				}
+			} else if (this.wantSwitch) {
+				if (m.content == 'move') {
+					this.wantSwitch = false;
+					this.canPickMove = true;
+					this.requestActions();
+				} else {
+					const choice = parseInt(m.content);
+					if (choice >= 1 || choice <= 3) {
+						if (this.side.pokemon[choice - 1] === undefined) {
+							void sendEmbed(context, context.channel, `You don't have a Pokémon in your slot ${choice}`);
+						} else if (choice === 1) {
+							void sendEmbed(context, context.channel, `You must send an other Pokémon to fight`);
+						} else {
+							this.choose(`switch ${choice}`);
+							this.mustSwitch = false;
+						}
 					}
 				}
 			}
@@ -89,10 +115,10 @@ export class DiscordPlayer extends BattlePlayer {
 			embed.addField('Move #4', moves[3] !== undefined ? `${moves[3].move}\n${moves[3].disabled ? `Disabled` : `${moves[3].pp}/${moves[3].maxpp}`}` : `\u2800`, true);
 			embed.addField('\u2800', '\u2800', true);
 
-			embed.setFooter(`Select move by sending 1, 2, 3 or 4`);
+			embed.setFooter(`Select move by sending 1, 2, 3 or 4. Send switch to switch Pokémon`);
 
 			void this.context.channel.createMessage(embed);
-		} else if (this.mustSwitch) {
+		} else if (this.mustSwitch || this.wantSwitch) {
 			const pokemons = this.side.pokemon;
 
 			const embed = new MessageEmbed();
@@ -109,26 +135,21 @@ export class DiscordPlayer extends BattlePlayer {
 	receiveError(error: Error) {
 		// If we made an unavailable choice we will receive a followup request to
 		// allow us the opportunity to correct our decision.
-		this.canPickMove = false;
-		console.log(error);
+		this.requestActions();
 		if (error.message.startsWith('[Unavailable choice]')) return;
 		throw error;
 	}
 
 	receiveRequest(request: AnyObject) {
-		console.log('Request', request);
 		if (request.wait) {
-			console.log('Wait');
 			// wait request
 			// do nothing
 		} else if (request.forceSwitch) {
-			console.log('Waiting for switch');
 			this.mustSwitch = true;
 			// switch request
 			const pokemon = request.side.pokemon;
 			const chosen: number[] = [];
 			const choices = request.forceSwitch.map((mustSwitch: AnyObject) => {
-				console.log("Must switch", mustSwitch);
 				if (!mustSwitch) return `pass`;
 
 
@@ -145,16 +166,14 @@ export class DiscordPlayer extends BattlePlayer {
 				if (!canSwitch.length) return `pass`;
 				const target = this.chooseSwitch(
 					request.active,
-					canSwitch.map(slot => ({slot, pokemon: pokemon[slot - 1]}))
+					canSwitch.map(slot => ({ slot, pokemon: pokemon[slot - 1] }))
 				);
 				chosen.push(target);
 				return `switch ${target}`;
 			});
-			console.log(choices);
 
 			// this.choose(`switch 1`);
 		} else if (request.active) {
-			console.log('Select move');
 			this.canPickMove = true;
 			this.side = request.side;
 			this.active = request.active[0];
@@ -228,7 +247,7 @@ export class DiscordPlayer extends BattlePlayer {
 						}
 					}
 					if (m.zMove) move += ` zmove`;
-					return {choice: move, move: m};
+					return { choice: move, move: m };
 				});
 
 				const canSwitch = range(1, 6).filter(j => (
@@ -245,7 +264,7 @@ export class DiscordPlayer extends BattlePlayer {
 				if (switches.length && (!moves.length || this.prng.next() > this.move)) {
 					const target = this.chooseSwitch(
 						active,
-						canSwitch.map(slot => ({slot, pokemon: pokemon[slot - 1]}))
+						canSwitch.map(slot => ({ slot, pokemon: pokemon[slot - 1] }))
 					);
 					chosen.push(target);
 					return `switch ${target}`;
@@ -274,28 +293,22 @@ export class DiscordPlayer extends BattlePlayer {
 						` dynamax='${canDynamax}')`);
 				}
 			});
-			console.log(choices);
 			// this.choose(choices.join(`, `));
 		} else {
-			console.log('Preview');
 			// team preview?
 			this.choose(this.chooseTeamPreview(request.side.pokemon));
 		}
 	}
 
 	protected chooseTeamPreview(team: AnyObject[]): string {
-		console.log('Choose team preview', team);
 		return `default`;
 	}
 
 	protected chooseMove(active: AnyObject, moves: { choice: string, move: AnyObject }[]): string {
-		console.log('Choose move');
-
 		return this.prng.sample(moves).choice;
 	}
 
 	protected chooseSwitch(active: AnyObject | undefined, switches: { slot: number, pokemon: AnyObject }[]): number {
-		console.log('Choose switch');
 		return this.prng.sample(switches).slot;
 	}
 }
