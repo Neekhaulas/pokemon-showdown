@@ -6,19 +6,19 @@
  * @license MIT
  */
 
-import { ObjectReadWriteStream } from '../../lib/streams';
-import { BattlePlayer } from '../battle-stream';
-import { PRNG, PRNGSeed } from '../prng';
-import { sendEmbed } from '../../../src/modules/utils';
+import {ObjectReadWriteStream} from '../../lib/streams';
+import {BattlePlayer} from '../battle-stream';
+import {PRNG, PRNGSeed} from '../prng';
+import {sendEmbed} from '../../../src/modules/utils';
 import MessageEmbed from '../../../src/modules/MessageEmbed';
-import { MessageCollector } from 'eris-collector';
-import { Client, Message, TextableChannel } from 'eris';
+import {MessageCollector} from 'eris-collector';
+import {Client, Message, TextableChannel} from 'eris';
 
 export class DiscordPlayer extends BattlePlayer {
 	protected readonly move: number;
 	protected readonly mega: number;
 	protected readonly prng: PRNG;
-	protected readonly context: { client: Client, channel: TextableChannel, userID: string };
+	protected readonly context: {client: Client, channel: TextableChannel, userID: string};
 	canPickMove: boolean;
 	mustSwitch: boolean;
 	wantSwitch: boolean;
@@ -28,9 +28,9 @@ export class DiscordPlayer extends BattlePlayer {
 
 	constructor(
 		playerStream: ObjectReadWriteStream<string>,
-		options: { move?: number, mega?: number, seed?: PRNG | PRNGSeed | null } = {},
+		options: {move?: number, mega?: number, seed?: PRNG | PRNGSeed | null} = {},
 		debug = false,
-		context: { client: Client, channel: TextableChannel, userID: string }
+		context: {client: Client, channel: TextableChannel, userID: string}
 	) {
 		super(playerStream, debug);
 		this.move = options.move || 1.0;
@@ -48,7 +48,7 @@ export class DiscordPlayer extends BattlePlayer {
 		this.collector.on('collect', (m: Message) => {
 			if (this.canPickMove) {
 				let choice: any = m.content;
-				if (choice == 'switch') {
+				if (choice === 'switch') {
 					this.wantSwitch = true;
 					this.canPickMove = false;
 					this.requestActions();
@@ -78,7 +78,7 @@ export class DiscordPlayer extends BattlePlayer {
 					}
 				}
 			} else if (this.wantSwitch) {
-				if (m.content == 'move') {
+				if (m.content === 'move') {
 					this.wantSwitch = false;
 					this.canPickMove = true;
 					this.requestActions();
@@ -166,7 +166,7 @@ export class DiscordPlayer extends BattlePlayer {
 				if (!canSwitch.length) return `pass`;
 				const target = this.chooseSwitch(
 					request.active,
-					canSwitch.map(slot => ({ slot, pokemon: pokemon[slot - 1] }))
+					canSwitch.map(slot => ({slot, pokemon: pokemon[slot - 1]}))
 				);
 				chosen.push(target);
 				return `switch ${target}`;
@@ -247,7 +247,7 @@ export class DiscordPlayer extends BattlePlayer {
 						}
 					}
 					if (m.zMove) move += ` zmove`;
-					return { choice: move, move: m };
+					return {choice: move, move: m};
 				});
 
 				const canSwitch = range(1, 6).filter(j => (
@@ -264,7 +264,7 @@ export class DiscordPlayer extends BattlePlayer {
 				if (switches.length && (!moves.length || this.prng.next() > this.move)) {
 					const target = this.chooseSwitch(
 						active,
-						canSwitch.map(slot => ({ slot, pokemon: pokemon[slot - 1] }))
+						canSwitch.map(slot => ({slot, pokemon: pokemon[slot - 1]}))
 					);
 					chosen.push(target);
 					return `switch ${target}`;
@@ -304,11 +304,11 @@ export class DiscordPlayer extends BattlePlayer {
 		return `default`;
 	}
 
-	protected chooseMove(active: AnyObject, moves: { choice: string, move: AnyObject }[]): string {
+	protected chooseMove(active: AnyObject, moves: {choice: string, move: AnyObject}[]): string {
 		return this.prng.sample(moves).choice;
 	}
 
-	protected chooseSwitch(active: AnyObject | undefined, switches: { slot: number, pokemon: AnyObject }[]): number {
+	protected chooseSwitch(active: AnyObject | undefined, switches: {slot: number, pokemon: AnyObject}[]): number {
 		return this.prng.sample(switches).slot;
 	}
 }

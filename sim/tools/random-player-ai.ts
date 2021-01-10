@@ -26,9 +26,7 @@ export class RandomPlayerAI extends BattlePlayer {
 		this.prng = options.seed && !Array.isArray(options.seed) ? options.seed : new PRNG(options.seed);
 	}
 
-	kill() {
-		
-	}
+	kill() {}
 
 	receiveError(error: Error) {
 		// If we made an unavailable choice we will receive a followup request to
