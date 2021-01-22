@@ -14129,6 +14129,7 @@ export const Pokedex: {[speciesid: string]: SpeciesData} = {
 		heightm: 0.2,
 		weightkg: 8,
 		color: "Gray",
+		evos: ["Melmetal"],
 		eggGroups: ["Undiscovered"],
 	},
 	melmetal: {
@@ -14141,6 +14142,9 @@ export const Pokedex: {[speciesid: string]: SpeciesData} = {
 		heightm: 2.5,
 		weightkg: 800,
 		color: "Gray",
+		prevo: "Meltan",
+		evoType: "useItem",
+		evoItem: "Meltan Candy",
 		eggGroups: ["Undiscovered"],
 		canGigantamax: "G-Max Meltdown",
 	},
