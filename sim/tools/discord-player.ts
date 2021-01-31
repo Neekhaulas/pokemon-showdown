@@ -78,7 +78,7 @@ export class DiscordPlayer extends BattlePlayer {
 					}
 				}
 			} else if (this.wantSwitch) {
-				if (m.content === 'move') {
+				if (m.content === 'move' || m.content === 'moves') {
 					this.wantSwitch = false;
 					this.canPickMove = true;
 					this.requestActions();
@@ -122,11 +122,11 @@ export class DiscordPlayer extends BattlePlayer {
 			const pokemons = this.side.pokemon;
 
 			const embed = new MessageEmbed();
-			embed.addField('Pokemon #1', pokemons[0] !== undefined ? `${pokemons[0].ident.replace(/(p1: |p2: )/, '')}\nUnavailable` : `\u2800`, true);
-			embed.addField('Pokemon #2', pokemons[1] !== undefined ? `${pokemons[1].ident.replace(/(p1: |p2: )/, '')}\n${pokemons[1].condition}` : `\u2800`, true);
-			embed.addField('Pokemon #3', pokemons[2] !== undefined ? `${pokemons[2].ident.replace(/(p1: |p2: )/, '')}\n${pokemons[2].condition}` : `\u2800`, true);
+			embed.addField('Pokemon #1', pokemons[0] !== undefined ? `${pokemons[0].ident.replace(/(p1: |p2: )/, '').split(';')[0]}\nUnavailable` : `\u2800`, true);
+			embed.addField('Pokemon #2', pokemons[1] !== undefined ? `${pokemons[1].ident.replace(/(p1: |p2: )/, '').split(';')[0]}\n${pokemons[1].condition}` : `\u2800`, true);
+			embed.addField('Pokemon #3', pokemons[2] !== undefined ? `${pokemons[2].ident.replace(/(p1: |p2: )/, '').split(';')[0]}\n${pokemons[2].condition}` : `\u2800`, true);
 
-			embed.setFooter(`Select Pokémon to send by sending 1, 2 or 3`);
+			embed.setFooter(`Select Pokémon to send by sending 1, 2 or 3. Send moves to use a move`);
 
 			void this.context.channel.createMessage(embed);
 		}
