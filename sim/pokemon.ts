@@ -255,6 +255,8 @@ export class Pokemon {
 		[key: string]: any,
 	};
 
+	raid: boolean = false;
+
 	constructor(set: string | AnyObject, side: Side) {
 		this.side = side;
 		this.battle = side.battle;

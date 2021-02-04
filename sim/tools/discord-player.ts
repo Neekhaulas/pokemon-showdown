@@ -25,6 +25,7 @@ export class DiscordPlayer extends BattlePlayer {
 	active: any = null;
 	side: any = null;
 	collector: any;
+	lastRequest: any = null;
 
 	constructor(
 		playerStream: ObjectReadWriteStream<string>,
@@ -46,44 +47,47 @@ export class DiscordPlayer extends BattlePlayer {
 		this.collector = new MessageCollector(context.client, context.channel, filter);
 
 		this.collector.on('collect', (m: Message) => {
+			var message = m.content.toLowerCase();
 			if (this.canPickMove) {
-				let choice: any = m.content;
-				if (choice === 'switch') {
+				if (message === 'switch') {
 					this.wantSwitch = true;
 					this.canPickMove = false;
 					this.requestActions();
 				} else {
-					choice = parseInt(choice);
+					let choice: any = parseInt(message);
 					if (choice >= 1 || choice <= 4) {
 						if (this.active.moves[choice - 1] === undefined) {
 							void sendEmbed(context, context.channel, `Your Pokémon doesn't have a move ${choice}`);
 						} else if (this.active.moves[choice - 1].disabled) {
-							void sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1]} because it is disabled`);
+							void sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1].name} because it is disabled`);
 						} else {
+							void sendEmbed(context, context.channel, `Waiting for you opponenent.`);
 							this.choose(`move ${choice}`);
 							this.canPickMove = false;
 						}
 					}
 				}
 			} else if (this.mustSwitch) {
-				const choice = parseInt(m.content);
+				const choice = parseInt(message);
 				if (choice >= 1 || choice <= 3) {
 					if (this.side.pokemon[choice - 1] === undefined) {
 						void sendEmbed(context, context.channel, `You don't have a Pokémon in your slot ${choice}`);
 					} else if (choice === 1) {
 						void sendEmbed(context, context.channel, `You must send an other Pokémon to fight`);
+					} else if(this.side.pokemon[choice - 1].condition.includes('fnt')) {
+						void sendEmbed(context, context.channel, `You can't send a fainted Pokémon`);
 					} else {
 						this.choose(`switch ${choice}`);
 						this.mustSwitch = false;
 					}
 				}
 			} else if (this.wantSwitch) {
-				if (m.content === 'move' || m.content === 'moves') {
+				if (message === 'move' || message === 'moves') {
 					this.wantSwitch = false;
 					this.canPickMove = true;
 					this.requestActions();
 				} else {
-					const choice = parseInt(m.content);
+					const choice = parseInt(message);
 					if (choice >= 1 || choice <= 3) {
 						if (this.side.pokemon[choice - 1] === undefined) {
 							void sendEmbed(context, context.channel, `You don't have a Pokémon in your slot ${choice}`);
@@ -135,12 +139,14 @@ export class DiscordPlayer extends BattlePlayer {
 	receiveError(error: Error) {
 		// If we made an unavailable choice we will receive a followup request to
 		// allow us the opportunity to correct our decision.
+		this.receiveRequest(this.lastRequest);
 		this.requestActions();
-		if (error.message.startsWith('[Unavailable choice]')) return;
-		throw error;
+		// if (error.message.startsWith('[Unavailable choice]')) return;
+		//throw error;
 	}
 
 	receiveRequest(request: AnyObject) {
+		this.lastRequest = request;
 		if (request.wait) {
 			// wait request
 			// do nothing

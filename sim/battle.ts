@@ -2994,6 +2994,7 @@ export class Battle {
 			if (options.raid && options.maxHp && options.currentHp) {
 				side.pokemon[0].maxhp = options.maxHp;
 				side.pokemon[0].hp = options.currentHp;
+				side.pokemon[0].raid = true;
 			}
 			this.sides[slotNum] = side;
 		} else {
