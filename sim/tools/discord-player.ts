@@ -47,7 +47,7 @@ export class DiscordPlayer extends BattlePlayer {
 		this.collector = new MessageCollector(context.client, context.channel, filter);
 
 		this.collector.on('collect', (m: Message) => {
-			var message = m.content.toLowerCase();
+			const message = m.content.toLowerCase();
 			if (this.canPickMove) {
 				if (message === 'switch') {
 					this.wantSwitch = true;
@@ -74,7 +74,7 @@ export class DiscordPlayer extends BattlePlayer {
 						void sendEmbed(context, context.channel, `You don't have a Pokémon in your slot ${choice}`);
 					} else if (choice === 1) {
 						void sendEmbed(context, context.channel, `You must send an other Pokémon to fight`);
-					} else if(this.side.pokemon[choice - 1].condition.includes('fnt')) {
+					} else if (this.side.pokemon[choice - 1].condition.includes('fnt')) {
 						void sendEmbed(context, context.channel, `You can't send a fainted Pokémon`);
 					} else {
 						this.choose(`switch ${choice}`);
@@ -142,7 +142,7 @@ export class DiscordPlayer extends BattlePlayer {
 		this.receiveRequest(this.lastRequest);
 		this.requestActions();
 		// if (error.message.startsWith('[Unavailable choice]')) return;
-		//throw error;
+		// throw error;
 	}
 
 	receiveRequest(request: AnyObject) {

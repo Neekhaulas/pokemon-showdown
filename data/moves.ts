@@ -17001,7 +17001,7 @@ export const Moves: {[moveid: string]: MoveData} = {
 		noSketch: true,
 		onModifyMove(move, pokemon, target) {
 			move.type = '???';
-			if(pokemon.raid) {
+			if (pokemon.raid) {
 				move.ohko = true;
 			}
 			this.add('-activate', pokemon, 'move: Struggle');
