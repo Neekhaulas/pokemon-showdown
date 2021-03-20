@@ -147,7 +147,6 @@ export class DiscordPlayer extends BattlePlayer {
 	}
 
 	receiveRequest(request: AnyObject) {
-		console.log(request);
 		this.lastRequest = request;
 		if (request.wait) {
 			// wait request
