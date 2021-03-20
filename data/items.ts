@@ -7152,5 +7152,5 @@ export const Items: {[itemid: string]: ItemData} = {
 				return damage * 0.25;
 			}
 		},
-	}
+	},
 };
