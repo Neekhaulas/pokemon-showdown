@@ -6,19 +6,19 @@
  * @license MIT
  */
 
-import {ObjectReadWriteStream} from '../../lib/streams';
-import {BattlePlayer} from '../battle-stream';
-import {PRNG, PRNGSeed} from '../prng';
-import {sendEmbed} from '../../../src/modules/utils';
+import { ObjectReadWriteStream } from '../../lib/streams';
+import { BattlePlayer } from '../battle-stream';
+import { PRNG, PRNGSeed } from '../prng';
+import { sendEmbed } from '../../../src/modules/utils';
 import MessageEmbed from '../../../src/modules/MessageEmbed';
-import {MessageCollector} from 'eris-collector';
-import {Client, Message, TextableChannel} from 'eris';
+import { MessageCollector } from 'eris-collector';
+import { Client, Message, TextableChannel } from 'eris';
 
 export class DiscordPlayer extends BattlePlayer {
 	protected readonly move: number;
 	protected readonly mega: number;
 	protected readonly prng: PRNG;
-	protected readonly context: {client: Client, channel: TextableChannel, userID: string};
+	protected readonly context: { client: Client, channel: TextableChannel, userID: string };
 	canPickMove: boolean;
 	mustSwitch: boolean;
 	wantSwitch: boolean;
@@ -29,9 +29,9 @@ export class DiscordPlayer extends BattlePlayer {
 
 	constructor(
 		playerStream: ObjectReadWriteStream<string>,
-		options: {move?: number, mega?: number, seed?: PRNG | PRNGSeed | null} = {},
+		options: { move?: number, mega?: number, seed?: PRNG | PRNGSeed | null, hideWaitingForOpponent?: boolean } = {},
 		debug = false,
-		context: {client: Client, channel: TextableChannel, userID: string}
+		context: { client: Client, channel: TextableChannel, userID: string }
 	) {
 		super(playerStream, debug);
 		this.move = options.move || 1.0;
@@ -45,8 +45,10 @@ export class DiscordPlayer extends BattlePlayer {
 
 		const filter = (m: Message) => m.author.id === context.userID;
 		this.collector = new MessageCollector(context.client, context.channel, filter);
+		let time = 0;
 
 		this.collector.on('collect', (m: Message) => {
+			if(time > Date.now()) return;
 			const message = m.content.toLowerCase();
 			if (this.canPickMove) {
 				if (message === 'switch') {
@@ -61,7 +63,10 @@ export class DiscordPlayer extends BattlePlayer {
 						} else if (this.active.moves[choice - 1].disabled) {
 							void sendEmbed(context, context.channel, `You can't use ${this.active.moves[choice - 1].name} because it is disabled`);
 						} else {
-							void sendEmbed(context, context.channel, `Waiting for you opponent.`);
+							if (!options.hideWaitingForOpponent) {
+								void sendEmbed(context, context.channel, `Waiting for you opponent.`);
+							}
+							time = Date.now() + 1500;
 							this.choose(`move ${choice}`);
 							this.canPickMove = false;
 						}
@@ -78,6 +83,7 @@ export class DiscordPlayer extends BattlePlayer {
 						void sendEmbed(context, context.channel, `You can't send a fainted Pokémon`);
 					} else {
 						this.choose(`switch ${choice}`);
+						time = Date.now() + 1500;
 						this.mustSwitch = false;
 					}
 				}
@@ -94,7 +100,10 @@ export class DiscordPlayer extends BattlePlayer {
 						} else if (choice === 1) {
 							void sendEmbed(context, context.channel, `You must send an other Pokémon to fight`);
 						} else {
-							void sendEmbed(context, context.channel, `Waiting for you opponent.`);
+							if (!options.hideWaitingForOpponent) {
+								void sendEmbed(context, context.channel, `Waiting for you opponent.`);
+							}
+							time = Date.now() + 1500;
 							this.choose(`switch ${choice}`);
 							this.mustSwitch = false;
 						}
@@ -169,11 +178,11 @@ export class DiscordPlayer extends BattlePlayer {
 		return `default`;
 	}
 
-	protected chooseMove(active: AnyObject, moves: {choice: string, move: AnyObject}[]): string {
+	protected chooseMove(active: AnyObject, moves: { choice: string, move: AnyObject }[]): string {
 		return this.prng.sample(moves).choice;
 	}
 
-	protected chooseSwitch(active: AnyObject | undefined, switches: {slot: number, pokemon: AnyObject}[]): number {
+	protected chooseSwitch(active: AnyObject | undefined, switches: { slot: number, pokemon: AnyObject }[]): number {
 		return this.prng.sample(switches).slot;
 	}
 }

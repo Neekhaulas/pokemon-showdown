@@ -17003,6 +17003,7 @@ export const Moves: {[moveid: string]: MoveData} = {
 			move.type = '???';
 			if (pokemon.raid) {
 				move.ohko = true;
+				(<any>move).raid = true;
 			}
 			this.add('-activate', pokemon, 'move: Struggle');
 		},

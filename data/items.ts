@@ -1,4 +1,4 @@
-export const Items: {[itemid: string]: ItemData} = {
+export const Items: { [itemid: string]: ItemData } = {
 	abomasite: {
 		name: "Abomasite",
 		spritenum: 575,
@@ -145,7 +145,7 @@ export const Items: {[itemid: string]: ItemData} = {
 		onDamagingHit(damage, target, source, move) {
 			this.add('-enditem', target, 'Air Balloon');
 			target.item = '';
-			target.itemData = {id: '', target};
+			target.itemData = { id: '', target };
 			this.runEvent('AfterUseItem', target, null, null, this.dex.getItem('airballoon'));
 		},
 		onAfterSubDamage(damage, target, source, effect) {
@@ -153,7 +153,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			if (effect.effectType === 'Move') {
 				this.add('-enditem', target, 'Air Balloon');
 				target.item = '';
-				target.itemData = {id: '', target};
+				target.itemData = { id: '', target };
 				this.runEvent('AfterUseItem', target, null, null, this.dex.getItem('airballoon'));
 			}
 		},
@@ -227,7 +227,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({spd: 1});
+			this.boost({ spd: 1 });
 		},
 		num: 205,
 		gen: 3,
@@ -510,7 +510,7 @@ export const Items: {[itemid: string]: ItemData} = {
 		spritenum: 41,
 		onSwitchIn(pokemon) {
 			if (pokemon.isActive && pokemon.baseSpecies.name === 'Kyogre') {
-				this.queue.insertChoice({choice: 'runPrimal', pokemon: pokemon});
+				this.queue.insertChoice({ choice: 'runPrimal', pokemon: pokemon });
 			}
 		},
 		onPrimal(pokemon) {
@@ -1993,7 +1993,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({def: 1});
+			this.boost({ def: 1 });
 		},
 		num: 202,
 		gen: 3,
@@ -2666,7 +2666,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({def: 1});
+			this.boost({ def: 1 });
 		},
 		num: 687,
 		gen: 6,
@@ -2892,7 +2892,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({atk: 1});
+			this.boost({ atk: 1 });
 		},
 		num: 201,
 		gen: 3,
@@ -3213,7 +3213,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({spd: 1});
+			this.boost({ spd: 1 });
 		},
 		num: 688,
 		gen: 6,
@@ -3873,7 +3873,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({spa: 1});
+			this.boost({ spa: 1 });
 		},
 		num: 204,
 		gen: 3,
@@ -4470,7 +4470,7 @@ export const Items: {[itemid: string]: ItemData} = {
 		spritenum: 390,
 		onSwitchIn(pokemon) {
 			if (pokemon.isActive && pokemon.baseSpecies.name === 'Groudon') {
-				this.queue.insertChoice({choice: 'runPrimal', pokemon: pokemon});
+				this.queue.insertChoice({ choice: 'runPrimal', pokemon: pokemon });
 			}
 		},
 		onPrimal(pokemon) {
@@ -4791,7 +4791,7 @@ export const Items: {[itemid: string]: ItemData} = {
 			}
 		},
 		onEat(pokemon) {
-			this.boost({spe: 1});
+			this.boost({ spe: 1 });
 		},
 		num: 203,
 		gen: 3,
@@ -6855,7 +6855,7 @@ export const Items: {[itemid: string]: ItemData} = {
 		name: "Berserk Gene",
 		spritenum: 388,
 		onUpdate(pokemon) {
-			this.boost({atk: 2});
+			this.boost({ atk: 2 });
 			pokemon.addVolatile('confusion');
 			pokemon.setItem('');
 		},
@@ -7149,8 +7149,39 @@ export const Items: {[itemid: string]: ItemData} = {
 			this.debug("Heal is occurring: " + target + " <- " + source + " :: " + effect.id);
 			const canOoze = ['drain', 'leechseed', 'strengthsap'];
 			if (canOoze.includes(effect.id)) {
-				return damage * 0.25;
+				return damage * 0.33;
 			}
 		},
+		onAnyModifyBoost(boosts, pokemon) {
+			const unawareUser = this.effectData.target;
+			if (unawareUser === pokemon) return;
+			if (unawareUser === this.activePokemon && pokemon === this.activeTarget) {
+				if (pokemon.types.includes('Grass') || pokemon.types.includes('Water') || pokemon.types.includes('Fire')) {
+					boosts['def'] = 0;
+					boosts['spd'] = 0;
+					boosts['evasion'] = 0;
+				} else {
+					boosts['def'] = Math.min(boosts.def ?? 0, 3);
+					boosts['spd'] = Math.min(boosts.spd ?? 0, 3);
+					boosts['evasion'] = Math.min(boosts.evasion ?? 0, 3);
+				}
+			}
+			if (pokemon === this.activePokemon && unawareUser === this.activeTarget) {
+				if (pokemon.types.includes('Grass') || pokemon.types.includes('Water') || pokemon.types.includes('Fire')) {
+					boosts['atk'] = 0;
+					boosts['def'] = 0;
+					boosts['spa'] = 0;
+					boosts['accuracy'] = 0;
+				} else {
+					boosts['atk'] = Math.min(boosts.atk ?? 0, 3);
+					boosts['def'] = Math.min(boosts.def ?? 0, 3);
+					boosts['spa'] = Math.min(boosts.spa ?? 0, 3);
+					boosts['accuracy'] = Math.min(boosts.accuracy ?? 0, 3);
+				}
+			}
+		},
+		onTakeItem() {
+			return false;
+		}
 	},
 };

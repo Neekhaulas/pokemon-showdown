@@ -3671,7 +3671,7 @@ export const Abilities: {[abilityid: string]: AbilityData} = {
 	},
 	sturdy: {
 		onTryHit(pokemon, target, move) {
-			if (move.ohko) {
+			if (move.ohko && !(<any>move).raid) {
 				this.add('-immune', pokemon, '[from] ability: Sturdy');
 				return null;
 			}
