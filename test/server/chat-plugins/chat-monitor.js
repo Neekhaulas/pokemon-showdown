@@ -6,30 +6,30 @@
 'use strict';
 
 const assert = require('assert').strict;
-const {User, Connection} = require('../../users-utils');
+const {makeUser} = require('../../users-utils');
 
-const chatMonitor = require('../../../.server-dist/chat-plugins/chat-monitor');
+const {Filters} = require('../../../.server-dist/chat-plugins/chat-monitor');
 
 describe('Chat monitor', () => {
 	describe('regex generator', () => {
 		it('should generate case-insensitive regexes', () => {
-			const regex = chatMonitor.generateRegex('slur');
+			const regex = Filters.generateRegex('slur');
 			assert(regex.flags.includes('i'));
 		});
 
 		it('should use word boundaries for URL shortener regexes', () => {
-			const regex = chatMonitor.generateRegex('bit.ly/', false, true);
+			const regex = Filters.generateRegex('bit.ly/', false, true);
 			assert(String(regex).startsWith('/\\b'));
 		});
 
 		it('should correctly strip word boundaries', () => {
 			const regex = /\btest\b/iu;
-			assert.deepEqual(chatMonitor.stripWordBoundaries(regex), /test/iu);
+			assert.deepEqual(Filters.stripWordBoundaries(regex), /test/iu);
 		});
 
 		describe('evasion regexes', () => {
 			before(() => {
-				this.evasionRegex = chatMonitor.generateRegex('slur', true);
+				this.evasionRegex = Filters.generateRegex('slur', true);
 			});
 
 			it('should account for stretching', () => {
@@ -52,9 +52,8 @@ describe('Chat monitor', () => {
 	describe('in-room tests', () => {
 		before(() => {
 			this.room = Rooms.get('lobby');
-			this.connection = Connection('127.0.0.1');
-			this.user = User(this.connection);
-			this.user.forceRename("Unit Tester", true);
+			this.user = makeUser("Unit Tester");
+			this.connection = this.user.connections[0];
 			this.user.joinRoom(this.room.roomid, this.connection);
 
 			this.parse = async function (message) {
@@ -73,7 +72,7 @@ describe('Chat monitor', () => {
 
 		it('should lock users who use autolock phrases', async () => {
 			assert(!this.user.locked);
-			chatMonitor.addFilter({
+			Filters.add({
 				word: 'autolock',
 				list: 'autolock',
 			});
@@ -86,7 +85,7 @@ describe('Chat monitor', () => {
 
 		it('should lock users who evade evasion phrases', async () => {
 			assert(!this.user.locked);
-			chatMonitor.addFilter({
+			Filters.add({
 				word: 'slur',
 				list: 'evasion',
 			});
@@ -98,7 +97,7 @@ describe('Chat monitor', () => {
 
 		it('should replace words filtered to other words', async () => {
 			assert(!this.user.locked);
-			chatMonitor.addFilter({
+			Filters.add({
 				word: 'replace me',
 				list: 'wordfilter',
 				replacement: 'i got replaced',
@@ -113,7 +112,7 @@ describe('Chat monitor', () => {
 
 		it('should prevent filtered words from being said', async () => {
 			assert(!this.user.locked);
-			chatMonitor.addFilter({
+			Filters.add({
 				word: 'mild slur',
 				list: 'warn',
 			});
@@ -123,12 +122,12 @@ describe('Chat monitor', () => {
 		});
 
 		it('should prevent banwords and evasion banwords from being used in usernames', () => {
-			chatMonitor.addFilter({
+			Filters.add({
 				word: 'nameslur',
 				list: 'warn',
 			});
 
-			chatMonitor.addFilter({
+			Filters.add({
 				word: 'strongnameslur',
 				list: 'evasion',
 			});

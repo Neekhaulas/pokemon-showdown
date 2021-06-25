@@ -22,6 +22,7 @@ export const translations: Translations = {
 		"&amp; <strong>Global Administrator</strong> -  They can do anything, like change what this message says and promote users globally": "&amp; <strong>Global administrator</strong> - Zij kunnen alles doen, zoals veranderen wat hier staat en gebruikers globaal promoveren.",
 
 		"<strong>Room ranks</strong>": "<strong>Roomrangen</strong>",
+		"^ <strong>Prize Winner</strong> - They don't have any powers beyond a symbol.": "",
 		"+ <strong>Voice</strong> - They can use ! commands like !groups": "+ <strong>Voice</strong> - Ze kunnen ! commando's gebruiken en tijdens beperkte chat praten.",
 		"% <strong>Driver</strong> - The above, and they can mute and warn": "% <strong>Driver</strong> - Het bovenstaande en ze kunnen gebruikers muten en waarschuwen.",
 		"@ <strong>Moderator</strong> - The above, and they can room ban users": "@ <strong>Moderator</strong> - Het bovenstaande en ze kunnen gebruikers uit de room verbannen.",
@@ -157,5 +158,10 @@ export const translations: Translations = {
 		"pages/ladderhelp": "pages/ladderhelp",
 		"pages/rng": "pages/rng",
 		"pages/staff": "pages/staff",
+
+		"- We log PMs so you can report them - staff can't look at them without permission unless there's a law enforcement reason.": "",
+		"- We log IPs to enforce bans and mutes.": "",
+		"- We use cookies to save your login info and teams, and for Google Analytics and AdSense.": "",
+		'- For more information, you can read our <a href="https://${Config.routes.root}/privacy">full privacy policy.</a>': '',
 	},
 };
